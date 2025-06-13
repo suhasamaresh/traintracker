@@ -1,7 +1,67 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Train, Clock, MapPin, AlertCircle, CheckCircle, Navigation, Plus, Edit3, Trash2, Play, Pause, Settings, RefreshCw } from 'lucide-react';
+import { Train, Clock, MapPin, AlertCircle, CheckCircle, Navigation, Plus, Edit3, Trash2, Play, Pause, Settings } from 'lucide-react';
+
+// Move initialTrains OUTSIDE the component so it doesn't need to be a dependency
+const initialTrains = [
+  {
+    id: 'T001',
+    name: 'Express Metro',
+    route: 'Central-North',
+    currentStation: 'Central Station',
+    nextStation: 'Business District',
+    status: 'on-time',
+    delay: 0,
+    progress: 25,
+    estimatedArrival: '10:45 AM',
+    totalStops: 8,
+    currentStop: 2,
+    color: '#3B82F6'
+  },
+  {
+    id: 'T002',
+    name: 'City Line',
+    route: 'East-West',
+    currentStation: 'Tech Park',
+    nextStation: 'University',
+    status: 'delayed',
+    delay: 5,
+    progress: 60,
+    estimatedArrival: '10:52 AM',
+    totalStops: 12,
+    currentStop: 7,
+    color: '#EF4444'
+  },
+  {
+    id: 'T003',
+    name: 'Suburban Express',
+    route: 'South-Central',
+    currentStation: 'Mall Junction',
+    nextStation: 'Sports Complex',
+    status: 'on-time',
+    delay: 0,
+    progress: 80,
+    estimatedArrival: '10:38 AM',
+    totalStops: 6,
+    currentStop: 5,
+    color: '#10B981'
+  },
+  {
+    id: 'T004',
+    name: 'Airport Link',
+    route: 'Airport-Downtown',
+    currentStation: 'Terminal 2',
+    nextStation: 'Terminal 1',
+    status: 'boarding',
+    delay: 0,
+    progress: 15,
+    estimatedArrival: '11:05 AM',
+    totalStops: 10,
+    currentStop: 1,
+    color: '#8B5CF6'
+  }
+];
 
 const TrainTracker = () => {
   type Train = {
@@ -18,7 +78,7 @@ const TrainTracker = () => {
     currentStop: number;
     color: string;
   };
-  
+
   const [trains, setTrains] = useState<Train[]>([]);
   const [selectedRoute, setSelectedRoute] = useState('all');
   const [lastUpdate, setLastUpdate] = useState(new Date());
@@ -39,66 +99,6 @@ const TrainTracker = () => {
     color: '#3B82F6'
   });
 
-  // Mock train data with realistic schedules
-  const initialTrains = [
-    {
-      id: 'T001',
-      name: 'Express Metro',
-      route: 'Central-North',
-      currentStation: 'Central Station',
-      nextStation: 'Business District',
-      status: 'on-time',
-      delay: 0,
-      progress: 25,
-      estimatedArrival: '10:45 AM',
-      totalStops: 8,
-      currentStop: 2,
-      color: '#3B82F6'
-    },
-    {
-      id: 'T002',
-      name: 'City Line',
-      route: 'East-West',
-      currentStation: 'Tech Park',
-      nextStation: 'University',
-      status: 'delayed',
-      delay: 5,
-      progress: 60,
-      estimatedArrival: '10:52 AM',
-      totalStops: 12,
-      currentStop: 7,
-      color: '#EF4444'
-    },
-    {
-      id: 'T003',
-      name: 'Suburban Express',
-      route: 'South-Central',
-      currentStation: 'Mall Junction',
-      nextStation: 'Sports Complex',
-      status: 'on-time',
-      delay: 0,
-      progress: 80,
-      estimatedArrival: '10:38 AM',
-      totalStops: 6,
-      currentStop: 5,
-      color: '#10B981'
-    },
-    {
-      id: 'T004',
-      name: 'Airport Link',
-      route: 'Airport-Downtown',
-      currentStation: 'Terminal 2',
-      nextStation: 'Terminal 1',
-      status: 'boarding',
-      delay: 0,
-      progress: 15,
-      estimatedArrival: '11:05 AM',
-      totalStops: 10,
-      currentStop: 1,
-      color: '#8B5CF6'
-    }
-  ];
-
   const statusOptions = ['on-time', 'delayed', 'boarding', 'cancelled', 'maintenance'];
   const colorOptions = ['#3B82F6', '#EF4444', '#10B981', '#8B5CF6', '#F59E0B', '#EC4899', '#6B7280'];
 
@@ -110,17 +110,17 @@ const TrainTracker = () => {
   // Mock real-time updates
   const updateTrainData = useCallback(() => {
     if (!isLiveMode) return;
-    
-    setTrains(prevTrains => 
+
+    setTrains(prevTrains =>
       prevTrains.map(train => {
         if (train.status === 'cancelled' || train.status === 'maintenance') return train;
-        
+
         const progressIncrement = Math.random() * 3;
         const newProgress = Math.min(100, train.progress + progressIncrement);
-        
+
         let newStatus = train.status;
         let newDelay = train.delay;
-        
+
         // Randomly introduce delays or resolve them
         if (Math.random() < 0.08) {
           if (train.status === 'on-time' && Math.random() < 0.3) {
@@ -134,7 +134,7 @@ const TrainTracker = () => {
 
         // Update current stop based on progress
         const newCurrentStop = Math.min(
-          train.totalStops, 
+          train.totalStops,
           Math.ceil((newProgress / 100) * train.totalStops)
         );
 
@@ -144,7 +144,7 @@ const TrainTracker = () => {
           status: newStatus,
           delay: newDelay,
           currentStop: newCurrentStop,
-          estimatedArrival: newStatus === 'delayed' 
+          estimatedArrival: newStatus === 'delayed'
             ? addMinutesToTime(train.estimatedArrival, newDelay)
             : train.estimatedArrival
         };
@@ -158,7 +158,10 @@ const TrainTracker = () => {
     const [time, period] = timeStr.split(' ');
     const [hours, mins] = time.split(':');
     const date = new Date();
-    date.setHours(period === 'PM' ? parseInt(hours) + 12 : parseInt(hours));
+    let hrs = parseInt(hours);
+    if (period === 'PM' && hrs !== 12) hrs += 12;
+    if (period === 'AM' && hrs === 12) hrs = 0;
+    date.setHours(hrs);
     date.setMinutes(parseInt(mins) + minutes);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -172,12 +175,12 @@ const TrainTracker = () => {
   // Add new train
   const handleAddTrain = () => {
     if (!newTrain.name || !newTrain.route || !newTrain.currentStation) return;
-    
+
     const train: Train = {
       ...newTrain,
       id: `T${String(Date.now()).slice(-3)}`,
     };
-    
+
     setTrains(prev => [...prev, train]);
     setNewTrain({
       name: '',
@@ -197,7 +200,7 @@ const TrainTracker = () => {
 
   // Update existing train
   const handleUpdateTrain = (updatedTrain: Train) => {
-    setTrains(prev => prev.map(train => 
+    setTrains(prev => prev.map(train =>
       train.id === updatedTrain.id ? updatedTrain : train
     ));
     setEditingTrain(null);
@@ -210,47 +213,15 @@ const TrainTracker = () => {
 
   // Quick status update
   const handleQuickStatusUpdate = (trainId: string, newStatus: string) => {
-    setTrains(prev => prev.map(train => 
+    setTrains(prev => prev.map(train =>
       train.id === trainId ? { ...train, status: newStatus } : train
     ));
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'on-time':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'delayed':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
-      case 'boarding':
-        return <Navigation className="w-4 h-4 text-blue-500" />;
-      case 'cancelled':
-        return <AlertCircle className="w-4 h-4 text-gray-500" />;
-      case 'maintenance':
-        return <Settings className="w-4 h-4 text-orange-500" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-500" />;
-    }
-  };
+  // Removed unused getStatusIcon and getStatusColor
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'on-time':
-        return 'bg-green-100 text-green-800';
-      case 'delayed':
-        return 'bg-red-100 text-red-800';
-      case 'boarding':
-        return 'bg-blue-100 text-blue-800';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800';
-      case 'maintenance':
-        return 'bg-orange-100 text-orange-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const filteredTrains = selectedRoute === 'all' 
-    ? trains 
+  const filteredTrains = selectedRoute === 'all'
+    ? trains
     : trains.filter(train => train.route === selectedRoute);
 
   const routes = ['all', ...new Set(trains.map(train => train.route))];
@@ -259,7 +230,7 @@ const TrainTracker = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Header with Controls */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-2xl shadow-xl p-6 mb-6"
@@ -274,7 +245,7 @@ const TrainTracker = () => {
                 <p className="text-gray-600">Real-time tracking & administration</p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               {/* Live Mode Toggle */}
               <motion.button
@@ -282,8 +253,8 @@ const TrainTracker = () => {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsLiveMode(!isLiveMode)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  isLiveMode 
-                    ? 'bg-green-600 text-white' 
+                  isLiveMode
+                    ? 'bg-green-600 text-white'
                     : 'bg-gray-200 text-gray-700'
                 }`}
               >
@@ -417,7 +388,7 @@ const TrainTracker = () => {
         </AnimatePresence>
 
         {/* Route Filter */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
@@ -456,7 +427,7 @@ const TrainTracker = () => {
                 className="bg-white rounded-2xl shadow-xl overflow-hidden"
               >
                 {/* Train Header */}
-                <div 
+                <div
                   className="p-4 text-white relative"
                   style={{ backgroundColor: train.color }}
                 >
@@ -484,7 +455,7 @@ const TrainTracker = () => {
                       </motion.button>
                     </div>
                   </div>
-                  
+
                   {/* Status with quick update */}
                   <div className="mt-3">
                     <select
@@ -560,7 +531,7 @@ const TrainTracker = () => {
         </div>
 
         {/* Quick Stats */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -568,11 +539,11 @@ const TrainTracker = () => {
         >
           {statusOptions.map(status => (
             <div key={status} className="bg-white rounded-xl shadow-lg p-4 text-center">
-              <div className="text-xl font-bold" style={{ 
-                color: status === 'on-time' ? '#10B981' : 
-                       status === 'delayed' ? '#EF4444' : 
-                       status === 'boarding' ? '#3B82F6' : 
-                       status === 'cancelled' ? '#6B7280' : '#F59E0B'
+              <div className="text-xl font-bold" style={{
+                color: status === 'on-time' ? '#10B981' :
+                  status === 'delayed' ? '#EF4444' :
+                  status === 'boarding' ? '#3B82F6' :
+                  status === 'cancelled' ? '#6B7280' : '#F59E0B'
               }}>
                 {trains.filter(t => t.status === status).length}
               </div>
