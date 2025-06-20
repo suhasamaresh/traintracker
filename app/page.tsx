@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-+ import { Train, Clock, MapPin, AlertCircle, CheckCircle, Navigation, Plus, Edit3, Trash2, Play, Pause, Settings } from 'lucide-react';
+import { Train, Clock, MapPin, AlertCircle, CheckCircle, Navigation, Plus, Edit3, Trash2, Play, Pause, Settings } from 'lucide-react';
 
 // Move initialTrains OUTSIDE the component so it doesn't need to be a dependency
 const initialTrains = [
